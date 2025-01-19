@@ -10,15 +10,6 @@ export interface RSSSubscription {
 export class Database {
   constructor(private db: D1Database) {}
 
-  async createUserConfig(userId: number): Promise<void> {
-    const now = Date.now();
-    await this.db.prepare("INSERT INTO user_configs (user_id, fetch_interval, created_at, updated_at) VALUES (?, ?, ?, ?)").bind(userId, 10, now, now).run();
-  }
-
-  async updateFetchInterval(userId: number, interval: number): Promise<void> {
-    await this.db.prepare("UPDATE user_configs SET fetch_interval = ?, updated_at = ? WHERE user_id = ?").bind(interval, Date.now(), userId).run();
-  }
-
   // RSS订阅相关操作
   async addSubscription(userId: number, feedUrl: string): Promise<void> {
     const now = Date.now();
