@@ -3,6 +3,7 @@ CREATE TABLE
   IF NOT EXISTS rss_subscriptions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL, -- 订阅用户的 Telegram ID
+    feed_title TEXT NOT NULL, -- 订阅源名称
     feed_url TEXT NOT NULL, -- RSS feed URL
     last_fetch_time INTEGER, -- 最后一次获取更新的时间
     last_item_guid TEXT, -- 最后一篇文章的唯一标识

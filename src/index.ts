@@ -62,7 +62,7 @@ export default {
       const subscriptions = await db.getSubscriptionsToUpdate(env.UPDATE_INTERVAL);
       for (const sub of subscriptions) {
         try {
-          const items = await rssUtil.fetchFeed(sub.feed_url);
+          const { items } = await rssUtil.fetchFeed(sub.feed_url);
           const lastItemGuid = sub.last_item_guid;
 
           // 找到上次发送的文章的索引

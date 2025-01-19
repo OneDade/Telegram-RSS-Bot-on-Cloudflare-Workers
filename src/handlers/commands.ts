@@ -46,10 +46,10 @@ export class CommandHandler {
 
     try {
       // 先尝试获取 feed，确保 URL 有效
-      const items = await this.rssUtil.fetchFeed(feedUrl);
+      const { items, feedTitle } = await this.rssUtil.fetchFeed(feedUrl);
 
       // 添加订阅
-      await this.db.addSubscription(userId, feedUrl);
+      await this.db.addSubscription(userId, feedUrl, feedTitle);
 
       // 更新最后获取时间和 GUID
       if (items.length > 0) {
@@ -57,9 +57,9 @@ export class CommandHandler {
 
         // 发送成功订阅消息和最新文章
         const latestArticle = this.rssUtil.formatMessage(items[0]);
-        await this.sendMessage(message.chat.id, `成功订阅 RSS 源：${feedUrl}\n\n最新文章：\n${latestArticle}`);
+        await this.sendMessage(message.chat.id, `成功订阅 RSS 源：[${feedTitle}](${feedUrl})\n\n最新文章：\n${latestArticle}`);
       } else {
-        await this.sendMessage(message.chat.id, `成功订阅 RSS 源：${feedUrl}\n\n当前没有任何文章`);
+        await this.sendMessage(message.chat.id, `成功订阅 RSS 源：[${feedTitle}](${feedUrl})\n\n当前没有任何文章`);
       }
     } catch (error) {
       await this.sendMessage(message.chat.id, `订阅失败：${error instanceof Error ? error.message : "Unknown error"}`);
@@ -94,7 +94,7 @@ export class CommandHandler {
       return;
     }
 
-    const subscriptionList = subscriptions.map((sub, index) => `${index + 1}. ${sub.feed_url}`).join("\n");
-    await this.sendMessage(message.chat.id, `RSS 订阅列表：\n${subscriptionList}`);
+    const subscriptionList = subscriptions.map((sub, index) => `${index + 1}. [${sub.feed_title}](${sub.feed_url})`).join("\n");
+    await this.sendMessage(message.chat.id, `订阅列表：\n${subscriptionList}`);
   }
 }
