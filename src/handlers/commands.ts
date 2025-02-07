@@ -6,19 +6,29 @@ import telegramifyMarkdown from "telegramify-markdown";
 export class CommandHandler {
   constructor(private db: Database, private rssUtil: RSSUtil, private token: string) {}
 
-  async sendMessage(chatId: number, text: string, parseMode?: string, options?: Record<string, any>) {
-    await fetch(`https://api.telegram.org/bot${this.token}/sendMessage`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: telegramifyMarkdown(text, "keep"),
-        parse_mode: parseMode || "MarkdownV2",
-        ...options,
-      }),
-    });
+  async sendMessage(chatId: number, text: string, options?: Record<string, any>) {
+    try {
+      const response = await fetch(`https://api.telegram.org/bot${this.token}/sendMessage`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text: telegramifyMarkdown(text, "escape"),
+          parse_mode: options?.parse_mode || "MarkdownV2",
+          ...options,
+        }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error: ${response.status} - ${errorText}`);
+      }
+
+      return response;
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
   }
 
   async handleStart(message: Message): Promise<void> {
@@ -31,7 +41,7 @@ export class CommandHandler {
 /list - 列出所有订阅的 RSS 源
 /start - 显示此帮助信息`;
 
-    await this.sendMessage(message.chat.id, helpText, undefined, { disable_web_page_preview: true });
+    await this.sendMessage(message.chat.id, helpText, { disable_web_page_preview: true });
   }
 
   async handleSubscribe(message: Message): Promise<void> {
