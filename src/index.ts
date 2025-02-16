@@ -54,14 +54,14 @@ export default {
   },
 
   async scheduled(event: ScheduledEvent | null, env: Env, _ctx: ExecutionContext) {
-    console.log("scheduled event triggered");
+    console.log("scheduled event triggered at ", new Date().toISOString());
     const db = new Database(env.DB);
     const rssUtil = new RSSUtil(env.UPDATE_INTERVAL);
 
     try {
       // 获取所有需要更新的订阅
       const subscriptions = await db.getSubscriptionsToUpdate(env.UPDATE_INTERVAL);
-      for (const sub of subscriptions) {
+      const fetchPromises = subscriptions.map(async (sub) => {
         try {
           const { items } = await rssUtil.fetchFeed(sub.feed_url);
           const lastItemGuid = sub.last_item_guid;
@@ -84,7 +84,8 @@ export default {
         } catch (error) {
           console.error(`Error processing subscription ${sub.feed_url}:`, error);
         }
-      }
+      });
+      await Promise.all(fetchPromises);
     } catch (error) {
       console.error("Error in scheduled task:", error);
     }
