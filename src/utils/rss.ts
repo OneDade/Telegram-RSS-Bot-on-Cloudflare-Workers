@@ -71,7 +71,7 @@ export class RSSUtil {
     }
   }
 
-  formatMessage(item: FeedItem): string {
-    return `📰 [${item.title}](${item.link})`;
+  formatMessage(item: FeedItem, feedTitle?: string): string {
+    return feedTitle ? `📰 ${feedTitle}: [${item.title}](${item.link})` : `📰 [${item.title}](${item.link})`;
   }
 }

@@ -73,7 +73,7 @@ export default {
 
           if (newItems.length > 0) {
             // 发送更新通知
-            const messages = newItems.map((item) => rssUtil.formatMessage(item));
+            const messages = newItems.map((item) => rssUtil.formatMessage(item, sub.feed_title));
             for (const message of messages) {
               await sendMessage(env.TELEGRAM_BOT_TOKEN, sub.user_id, message);
             }
