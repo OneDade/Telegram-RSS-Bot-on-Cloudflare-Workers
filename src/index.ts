@@ -2,6 +2,7 @@ import { Database } from "./utils/db";
 import { RSSUtil } from "./utils/rss";
 import { CommandHandler } from "./handlers/commands";
 import { TelegramMessage } from "@codebam/cf-workers-telegram-bot";
+import { sendMessage } from "./utils/tgapi";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -74,17 +75,7 @@ export default {
             // 发送更新通知
             const messages = newItems.map((item) => rssUtil.formatMessage(item));
             for (const message of messages) {
-              await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  chat_id: sub.user_id,
-                  text: message,
-                  parse_mode: "MarkdownV2",
-                }),
-              });
+              await sendMessage(env.TELEGRAM_BOT_TOKEN, sub.user_id, message);
             }
 
             // 更新最后获取时间和 GUID

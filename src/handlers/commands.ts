@@ -1,34 +1,13 @@
 import { TelegramMessage as Message } from "@codebam/cf-workers-telegram-bot";
 import { Database } from "../utils/db";
 import { RSSUtil } from "../utils/rss";
-import telegramifyMarkdown from "telegramify-markdown";
+import { sendMessage } from "../utils/tgapi";
 
 export class CommandHandler {
   constructor(private db: Database, private rssUtil: RSSUtil, private token: string) {}
 
   async sendMessage(chatId: number, text: string, options?: Record<string, any>) {
-    try {
-      const response = await fetch(`https://api.telegram.org/bot${this.token}/sendMessage`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: telegramifyMarkdown(text, "escape"),
-          parse_mode: options?.parse_mode || "MarkdownV2",
-          ...options,
-        }),
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Error: ${response.status} - ${errorText}`);
-      }
-
-      return response;
-    } catch (error) {
-      console.error("Fetch error:", error);
-    }
+    return await sendMessage(this.token, chatId, text, options);
   }
 
   async handleStart(message: Message): Promise<void> {
