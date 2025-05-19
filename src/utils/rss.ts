@@ -1,4 +1,5 @@
 import Parser from "rss-parser";
+import { Language, getMessage } from "./i18n";
 
 export interface FeedItem {
   title: string;
@@ -71,7 +72,8 @@ export class RSSUtil {
     }
   }
 
-  formatMessage(item: FeedItem, feedTitle?: string): string {
-    return feedTitle ? `📰 ${feedTitle}: [${item.title}](${item.link})` : `📰 [${item.title}](${item.link})`;
+  formatMessage(item: FeedItem, feedTitle?: string, lang: Language = "zh"): string {
+    const prefix = getMessage(lang, "article_prefix");
+    return feedTitle ? `${prefix} ${feedTitle}: [${item.title}](${item.link})` : `${prefix} [${item.title}](${item.link})`;
   }
 }

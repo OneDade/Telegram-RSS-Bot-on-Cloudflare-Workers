@@ -2,6 +2,7 @@ import { TelegramMessage as Message } from "@codebam/cf-workers-telegram-bot";
 import { Database } from "../utils/db";
 import { RSSUtil } from "../utils/rss";
 import { sendMessage } from "../utils/tgapi";
+import { Language, getMessage } from "../utils/i18n";
 
 export class CommandHandler {
   constructor(private db: Database, private rssUtil: RSSUtil, private token: string) {}
@@ -13,13 +14,22 @@ export class CommandHandler {
   async handleStart(message: Message): Promise<void> {
     const userId = message.from?.id;
     if (!userId) return;
-    const helpText = `RSS Bot [仓库地址与部署说明](https://github.com/lxl66566/Telegram-RSS-Bot-on-Cloudflare-Workers)
 
-/sub <rss_url> - 订阅一个 RSS 源
-/unsub <rss_url> - 取消订阅 RSS 源
-/list - 列出所有订阅的 RSS 源
-/start - 显示此帮助信息`;
+    const lang = await this.db.getUserLanguage(userId);
+    const helpText = getMessage(lang, "help");
+    await this.sendMessage(message.chat.id, helpText, { disable_web_page_preview: true });
+  }
 
+  async handleLanguage(message: Message): Promise<void> {
+    const userId = message.from?.id;
+    if (!userId) return;
+
+    const currentLang = await this.db.getUserLanguage(userId);
+    const newLang: Language = currentLang === "zh" ? "en" : "zh";
+    await this.db.setUserLanguage(userId, newLang);
+
+    // 显示新语言的帮助信息
+    const helpText = getMessage(newLang, "help");
     await this.sendMessage(message.chat.id, helpText, { disable_web_page_preview: true });
   }
 
@@ -27,9 +37,10 @@ export class CommandHandler {
     const userId = message.from?.id;
     if (!userId) return;
 
+    const lang = await this.db.getUserLanguage(userId);
     const feedUrl = message.text?.split(" ")[1];
     if (!feedUrl) {
-      await this.sendMessage(message.chat.id, "请提供 RSS 源的 URL");
+      await this.sendMessage(message.chat.id, getMessage(lang, "url_required"));
       return;
     }
 
@@ -45,13 +56,13 @@ export class CommandHandler {
         await this.db.updateLastFetch(userId, feedUrl, Date.now(), items[0].guid);
 
         // 发送成功订阅消息和最新文章
-        const latestArticle = this.rssUtil.formatMessage(items[0]);
-        await this.sendMessage(message.chat.id, `成功订阅 RSS 源：[${feedTitle}](${feedUrl})\n\n最新文章：\n${latestArticle}`);
+        const latestArticle = this.rssUtil.formatMessage(items[0], undefined, lang);
+        await this.sendMessage(message.chat.id, getMessage(lang, "subscribe_success", { title: feedTitle, url: feedUrl, article: latestArticle }));
       } else {
-        await this.sendMessage(message.chat.id, `成功订阅 RSS 源：[${feedTitle}](${feedUrl})\n\n当前没有任何文章`);
+        await this.sendMessage(message.chat.id, getMessage(lang, "subscribe_success_no_articles", { title: feedTitle, url: feedUrl }));
       }
     } catch (error) {
-      await this.sendMessage(message.chat.id, `订阅失败：${error instanceof Error ? error.message : "Unknown error"}`);
+      await this.sendMessage(message.chat.id, getMessage(lang, "subscribe_failed", { error: error instanceof Error ? error.message : "Unknown error" }));
     }
   }
 
@@ -59,17 +70,18 @@ export class CommandHandler {
     const userId = message.from?.id;
     if (!userId) return;
 
+    const lang = await this.db.getUserLanguage(userId);
     const feedUrl = message.text?.split(" ")[1];
     if (!feedUrl) {
-      await this.sendMessage(message.chat.id, "请提供要取消订阅的 RSS 源 URL");
+      await this.sendMessage(message.chat.id, getMessage(lang, "url_required"));
       return;
     }
 
     try {
       await this.db.removeSubscription(userId, feedUrl);
-      await this.sendMessage(message.chat.id, `已取消订阅 RSS 源：${feedUrl}`);
+      await this.sendMessage(message.chat.id, getMessage(lang, "unsubscribe_success", { url: feedUrl }));
     } catch (error) {
-      await this.sendMessage(message.chat.id, `取消订阅失败：${error instanceof Error ? error.message : "Unknown error"}`);
+      await this.sendMessage(message.chat.id, getMessage(lang, "unsubscribe_failed", { error: error instanceof Error ? error.message : "Unknown error" }));
     }
   }
 
@@ -77,13 +89,14 @@ export class CommandHandler {
     const userId = message.from?.id;
     if (!userId) return;
 
+    const lang = await this.db.getUserLanguage(userId);
     const subscriptions = await this.db.listSubscriptions(userId);
     if (subscriptions.length === 0) {
-      await this.sendMessage(message.chat.id, "还没有订阅任何 RSS 源");
+      await this.sendMessage(message.chat.id, getMessage(lang, "list_empty"));
       return;
     }
 
     const subscriptionList = subscriptions.map((sub, index) => `${index + 1}. [${sub.feed_title}](${sub.feed_url})`).join("\n");
-    await this.sendMessage(message.chat.id, `订阅列表：\n${subscriptionList}`);
+    await this.sendMessage(message.chat.id, `${getMessage(lang, "list_header")}\n${subscriptionList}`);
   }
 }

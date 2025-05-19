@@ -12,6 +12,7 @@ demo: <https://t.me/atri_rss_bot>
 - `/unsub <rss_url>` - 取消订阅 RSS
 - `/list` - 列出所有订阅的 RSS
 - `/start` - 查看帮助信息
+- `/lang` - 切换语言 (Switch language)
 
 ## 部署说明
 

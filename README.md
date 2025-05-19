@@ -12,6 +12,7 @@ demo: <https://t.me/atri_rss_bot>
 - `/unsub <rss_url>` - Unsubscribe from RSS feed
 - `/list` - List all subscribed RSS feeds
 - `/start` - View help information
+- `/lang` - Switch language (en / zh)
 
 ## Deployment Guide
 

@@ -11,7 +11,16 @@ CREATE TABLE
     UNIQUE (user_id, feed_url) -- 确保用户不会重复订阅同一个源
   );
 
+-- 用户语言设置表
+CREATE TABLE
+  IF NOT EXISTS user_settings (
+    user_id INTEGER PRIMARY KEY,
+    language TEXT NOT NULL DEFAULT 'zh' -- 用户语言设置，默认中文
+  );
+
 -- 创建索引以提高查询性能
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON rss_subscriptions (user_id);
 
 CREATE INDEX IF NOT EXISTS idx_subscriptions_last_fetch ON rss_subscriptions (last_fetch_time);
+
+CREATE INDEX IF NOT EXISTS user_settings_language ON user_settings (language);

@@ -3,6 +3,7 @@ import { RSSUtil } from "./utils/rss";
 import { CommandHandler } from "./handlers/commands";
 import { TelegramMessage } from "@codebam/cf-workers-telegram-bot";
 import { sendMessage } from "./utils/tgapi";
+import { getMessage } from "./utils/i18n";
 
 interface TelegramUpdate {
   message?: TelegramMessage;
@@ -43,10 +44,14 @@ export default {
           case "/list":
             await commandHandler.handleList(message);
             break;
+          case "/lang":
+            await commandHandler.handleLanguage(message);
+            break;
         }
       } catch (error) {
         console.error("Error handling command:", error);
-        await commandHandler.sendMessage(message.chat.id, "处理命令时发生错误，请稍后重试");
+        const lang = await db.getUserLanguage(message.from?.id || 0);
+        await commandHandler.sendMessage(message.chat.id, getMessage(lang, "error_processing"));
       }
     }
 
